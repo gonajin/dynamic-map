@@ -1,11 +1,11 @@
 import {useEffect} from 'react';
-import {useMapInstance} from '../../hooks';
+import {useCreateMap} from '../../hooks';
 import {mapContainer} from '../../styles/map.css';
 
 const MAP_DOM_ID = 'dynamic-maps-container';
 
 const Maps = () => {
-  const map = useMapInstance(MAP_DOM_ID, {});
+  const map = useCreateMap(MAP_DOM_ID, {});
 
   useEffect(() => {
     console.log(map);

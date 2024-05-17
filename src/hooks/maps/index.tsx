@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 
-export const useMapInstance = (
+export const useCreateMap = (
   containerId: string,
   mapOptions?: naver.maps.MapOptions
 ) => {
