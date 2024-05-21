@@ -1,5 +1,3 @@
 export * from './Overlay';
-export * from './utils';
-export * from './types';
+export * from './interfaces';
 export * from './constants';
-

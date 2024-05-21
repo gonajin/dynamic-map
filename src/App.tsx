@@ -1,7 +1,7 @@
-import Maps from './components/Maps';
+import Map from './components/Maps';
 
 function App() {
-  return <Maps />;
+  return <Map />;
 }
 
 export default App;

@@ -16,13 +16,13 @@ import {hydrateRoot} from 'react-dom/client';
 import {renderToString} from 'react-dom/server';
 import {MatchedMapEventName} from '../constants/events';
 import {NaverMapsEvents, OverlayOptions} from '../interfaces';
+import {simplify} from '../utils';
 
 interface IHandle {
   instance: any;
 }
 
-export interface IOverlay extends NaverMapsEvents, OverlayOptions {
-  map: naver.maps.Map;
+interface IOverlay extends NaverMapsEvents, OverlayOptions {
   OverlayView: any;
   propsNames: string[];
   eventNames: string[];
@@ -104,7 +104,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   }, []);
 
   const hydrateChildren = useCallback(() => {
-    const simplified = JSON.stringify(toString(children));
+    const simplified = JSON.stringify(simplify(children));
 
     if (prevContentRef.current === simplified) {
       return;
