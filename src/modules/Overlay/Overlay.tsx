@@ -134,7 +134,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   }, [overlayEvents]);
 
   useEffect(() => {
-    // 지도에서 마커 제거
+    // 지도에서 오버레이 제거
     return () => {
       removeAllEvents();
       beforeUnload?.();

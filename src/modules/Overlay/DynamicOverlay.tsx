@@ -4,7 +4,6 @@ import {
   forwardRef,
   ForwardRefRenderFunction,
   memo,
-  ReactNode,
   useEffect,
   useId,
   useImperativeHandle,
@@ -14,21 +13,24 @@ import {
 import {createRoot, Root} from 'react-dom/client';
 import {renderToString} from 'react-dom/server';
 import {MatchedMapEventName} from '../constants/events';
-import {DynamicOverlayOptions, NaverMapsEvents} from '../interfaces';
+import {
+  DynamicOptionalProps,
+  DynamicOverlayOptions,
+  NaverMapsEvents,
+} from '../interfaces';
 import {simplify} from '../utils';
 
 interface IHandle {
   instance: any;
 }
 
-interface IOverlay extends NaverMapsEvents, DynamicOverlayOptions {
+interface IOverlay
+  extends NaverMapsEvents,
+    DynamicOverlayOptions,
+    DynamicOptionalProps {
   OverlayView: any;
   propsNames: string[];
   eventNames: string[];
-  // 오버레이 UI를 항상 표시하는지 여부
-  // true인 경우 bounds 내 position이 포함되지 않을 때 지도에서 해당 오버레이 삭제
-  keepOverlayOutsideBounds?: boolean;
-  children?: ReactNode;
 }
 
 const navermaps = naver.maps;
@@ -229,7 +231,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   }, [overlayEvents]);
 
   useEffect(() => {
-    // 지도에서 마커 제거
+    // 지도에서 오버레이 제거
     return () => {
       removeAllEvents();
       beforeUnload?.();
