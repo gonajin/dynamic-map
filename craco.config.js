@@ -1,10 +1,14 @@
 const {VanillaExtractPlugin} = require('@vanilla-extract/webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const path = require('path');
 
 module.exports = {
   webpack: {
     plugins: {
       add: [new VanillaExtractPlugin(), new MiniCssExtractPlugin()],
+    },
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
     },
   },
   module: {
