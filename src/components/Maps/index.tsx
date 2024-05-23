@@ -1,7 +1,7 @@
 import {useState} from 'react';
-import {useCreateMap} from '../../hooks';
-import {Marker} from '../../modules';
-import {mapContainer} from '../../styles/map.css';
+import {useCreateMap} from '@/hooks';
+import {Circle, Marker} from '@/modules';
+import {mapContainer} from '@/styles/map.css';
 
 export const MAP_DOM_ID = 'dynamic-maps-container';
 const center = new naver.maps.LatLng(37.5666103, 126.9783882);
@@ -15,12 +15,15 @@ const Map = () => {
   return (
     <div id={MAP_DOM_ID} className={mapContainer}>
       {!!center && (
-        <Marker position={center} map={map}>
-          <div>
-            count: {count}
-            <button onClick={onClick}>클릭!</button>
-          </div>
-        </Marker>
+        <>
+          <Marker position={center} map={map}>
+            <div>
+              count: {count}
+              <button onClick={onClick}>클릭!</button>
+            </div>
+          </Marker>
+          <Circle map={map} center={center} radius={500} />
+        </>
       )}
     </div>
   );

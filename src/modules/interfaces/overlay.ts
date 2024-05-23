@@ -1,10 +1,12 @@
+export interface DynamicOverlayOptions
+  extends naver.maps.MarkerOptions,
+    OverlayLoadFunc {}
+
 export interface OverlayOptions
-  extends Omit<naver.maps.MarkerOptions, 'position'>,
-    Omit<naver.maps.CircleOptions, 'center'>,
+  extends Omit<naver.maps.CircleOptions, 'center'>,
     Omit<naver.maps.PolygonOptions, 'paths'>,
     Omit<naver.maps.PolylineOptions, 'path'>,
     OverlayLoadFunc {
-  position?: naver.maps.Coord | naver.maps.CoordLiteral;
   center?: naver.maps.Coord | naver.maps.CoordLiteral;
   path?:
     | naver.maps.ArrayOfCoords
@@ -17,6 +19,6 @@ export interface OverlayOptions
 }
 
 export interface OverlayLoadFunc {
-  onLoaded?: (instance: naver.maps.OverlayView) => void;
+  onLoaded?(instance: naver.maps.OverlayView): void;
   beforeUnload?: () => void;
 }

@@ -6,27 +6,34 @@ import {
   memo,
   ReactNode,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
 } from 'react';
+import {createRoot, Root} from 'react-dom/client';
+import {renderToString} from 'react-dom/server';
 import {MatchedMapEventName} from '../constants/events';
-import {NaverMapsEvents, OverlayOptions} from '../interfaces';
+import {DynamicOverlayOptions, NaverMapsEvents} from '../interfaces';
+import {simplify} from '../utils';
 
 interface IHandle {
   instance: any;
 }
 
-interface IOverlay extends NaverMapsEvents, OverlayOptions {
+interface IOverlay extends NaverMapsEvents, DynamicOverlayOptions {
   OverlayView: any;
   propsNames: string[];
   eventNames: string[];
+  // 오버레이 UI를 항상 표시하는지 여부
+  // true인 경우 bounds 내 position이 포함되지 않을 때 지도에서 해당 오버레이 삭제
+  keepOverlayOutsideBounds?: boolean;
   children?: ReactNode;
 }
 
 const navermaps = naver.maps;
 
-// 폴리곤, 폴리라인, 서클 오버레이를 리액트 코드로 쉽게 작성할 수 있도록 정의한 컴포넌트입니다.
+// 사용자 정의 오버레이, 마커를 리액트 코드로 쉽게 작성할 수 있도록 정의한 컴포넌트입니다.
 // https://zeakd.github.io/react-naver-maps/0.0.13 라이브러리에 영감을 받아 제작하였습니다.
 const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   {
@@ -34,6 +41,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     OverlayView,
     propsNames,
     eventNames,
+    keepOverlayOutsideBounds,
     children,
     onLoaded,
     beforeUnload,
@@ -55,6 +63,18 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     () => ({...pick(props, propsNames), map}),
     [propsNames, props, map]
   );
+
+  const prevContentRef = useRef<string>();
+
+  const uid = useId();
+
+  const overlayContent = useMemo(
+    () => (uid ? `<div id="${uid}"></div>` : renderToString(<>{children}</>)),
+    [children, uid]
+  );
+  const contentRootRef = useRef<Root>();
+
+  const idleRef = useRef<any>();
 
   const updateEvents = (
     overlay: typeof OverlayView,
@@ -85,6 +105,25 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     });
   };
 
+  const hydrateChildren = () => {
+    const simplified = JSON.stringify(simplify(children));
+
+    if (prevContentRef.current === simplified) {
+      return;
+    }
+
+    prevContentRef.current = simplified;
+
+    const container = document.getElementById(uid);
+
+    if (container) {
+      if (!contentRootRef.current) {
+        contentRootRef.current = createRoot(container);
+      }
+      contentRootRef.current.render(<>{children}</>);
+    }
+  };
+
   const createOverlay = () => {
     const overlay = new OverlayView({
       map,
@@ -101,11 +140,50 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
       return;
     }
 
-    if (map !== instance.current.getMap()) {
-      overlayProps.map = map;
+    const overlayOptions = {...overlayProps};
+
+    if (overlayContent && typeof overlayProps?.icon === 'string') {
+      overlayOptions.icon = {} as naver.maps.HtmlIcon;
     }
 
-    instance.current.setOptions(overlayProps);
+    if (overlayProps?.icon || overlayContent) {
+      const prevIconOptions = (overlayProps.icon ?? {}) as
+        | naver.maps.ImageIcon
+        | naver.maps.SymbolIcon
+        | naver.maps.HtmlIcon;
+
+      overlayOptions.icon = {
+        ...prevIconOptions,
+        content: overlayContent,
+      };
+    }
+
+    if (map !== instance.current.getMap()) {
+      overlayOptions.map = map;
+    }
+
+    instance.current.setOptions(overlayOptions);
+
+    if (uid) {
+      hydrateChildren();
+    }
+  };
+
+  const updateMarker = () => {
+    if (!map || !instance?.current) {
+      return;
+    }
+
+    const position = instance.current.getPosition();
+    const mapBounds = map.getBounds();
+
+    if (mapBounds.hasPoint(position)) {
+      if (!instance.current.getMap()) {
+        instance.current.setMap(map);
+      }
+    } else {
+      instance.current.setMap(null);
+    }
   };
 
   useEffect(() => {
@@ -120,11 +198,28 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   }, [map]);
 
   useEffect(() => {
+    if (keepOverlayOutsideBounds || !map) {
+      return;
+    }
+
+    if (overlayProps?.position) {
+      idleRef.current = navermaps.Event.addListener(map, 'idle', updateMarker);
+    }
+
+    return () => {
+      if (idleRef?.current) {
+        navermaps.Event.removeListener(idleRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, keepOverlayOutsideBounds]);
+
+  useEffect(() => {
     if (instance?.current) {
       updateOverlay();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, overlayProps]);
+  }, [map, overlayProps, overlayContent]);
 
   useEffect(() => {
     if (instance?.current) {
@@ -151,5 +246,5 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   return null;
 };
 
-export const Overlay = memo(forwardRef(OverlayFRRF));
-export type OverlayRef = ElementRef<typeof Overlay>;
+export const DynamicOverlay = memo(forwardRef(OverlayFRRF));
+export type DynamicOverlayRef = ElementRef<typeof DynamicOverlay>;

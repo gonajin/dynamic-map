@@ -1,6 +1,6 @@
 import React from 'react';
 import {NaverMapsEvents, OverlayLoadFunc} from '../interfaces';
-import {Overlay, OverlayRef} from './Overlay';
+import {DynamicOverlay, DynamicOverlayRef} from './DynamicOverlay';
 
 const eventsnames = [
   'animation_changed',
@@ -41,9 +41,9 @@ interface IProps
 }
 
 export const Marker = React.memo(
-  React.forwardRef<OverlayRef, IProps>((props, ref) => {
+  React.forwardRef<DynamicOverlayRef, IProps>((props, ref) => {
     return (
-      <Overlay
+      <DynamicOverlay
         OverlayView={naver.maps.Marker}
         eventNames={eventsnames}
         propsNames={propsnames}

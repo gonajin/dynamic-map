@@ -1,6 +1,7 @@
 export const MatchedMapEventName: {[key: string]: string} = {
   onAddLayer: 'addLayer',
   onClick: 'click',
+  onClickableChanged: 'clickable_changed',
   onDblclick: 'dblclick',
   onDoubletap: 'doubletap',
   onDrag: 'drag',
