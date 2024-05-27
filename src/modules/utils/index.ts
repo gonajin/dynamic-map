@@ -40,3 +40,19 @@ export const simplify = (children: ReactNode) => {
 
   return simplified;
 };
+
+export const isEqualPointPosition = (
+  a?: naver.maps.Point,
+  b?: naver.maps.Point
+) => {
+  if (!a && !b) {
+    return true;
+  } else if (!a || !b) {
+    return false;
+  }
+
+  a = new window.naver.maps.LatLng(a.x, a.y);
+  b = new window.naver.maps.LatLng(b.x, b.y);
+
+  return a.equals(b);
+};

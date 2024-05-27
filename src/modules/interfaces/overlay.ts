@@ -31,3 +31,21 @@ export interface DynamicOptionalProps {
   keepOverlayOutsideBounds?: boolean;
   children?: ReactNode;
 }
+
+export interface FloatPaneOptions
+  extends Pick<naver.maps.MarkerOptions, 'map' | 'position' | 'zIndex'> {}
+
+export interface ExtendedFloatPaneOptions extends FloatPaneOptions {
+  icon?: {content?: string};
+}
+
+export interface FloatPaneView extends naver.maps.OverlayView {
+  _element: HTMLDivElement | undefined;
+  _content?: string;
+  _position: FloatPaneOptions['position'];
+  _onMouseDown(event: MouseEvent): void;
+  setOptions(options: FloatPaneOptions): void;
+  getPosition(): FloatPaneOptions['position'];
+  setPosition(position: FloatPaneOptions['position']): void;
+  setZIndex(zIndex?: FloatPaneOptions['zIndex']): void;
+}

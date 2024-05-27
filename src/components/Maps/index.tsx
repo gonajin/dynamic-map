@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {useCreateMap} from '@/hooks';
 import {Circle, Marker} from '@/modules';
+import {FloatPane} from '@/modules/Overlay/FloatPane';
 import {mapContainer} from '@/styles/map.css';
 
 export const MAP_DOM_ID = 'dynamic-maps-container';
@@ -14,15 +15,20 @@ const Map = () => {
 
   return (
     <div id={MAP_DOM_ID} className={mapContainer}>
-      {!!center && (
+      {!!(map && center) && (
         <>
           <Marker position={center} map={map}>
-            <div>
+            <div style={{backgroundColor: 'white'}}>
               count: {count}
               <button onClick={onClick}>클릭!</button>
             </div>
           </Marker>
           <Circle map={map} center={center} radius={500} />
+          <FloatPane map={map} position={center} keepOverlayOutsideBounds>
+            <div style={{backgroundColor: 'white', width: 100, height: 100}}>
+              FloatPane
+            </div>
+          </FloatPane>
         </>
       )}
     </div>

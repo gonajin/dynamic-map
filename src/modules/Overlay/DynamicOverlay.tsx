@@ -11,7 +11,6 @@ import {
   useRef,
 } from 'react';
 import {createRoot, Root} from 'react-dom/client';
-import {renderToString} from 'react-dom/server';
 import {MatchedMapEventName} from '../constants/events';
 import {
   DynamicOptionalProps,
@@ -21,6 +20,7 @@ import {
 import {simplify} from '../utils';
 
 interface IHandle {
+  id: string;
   instance: any;
 }
 
@@ -35,7 +35,7 @@ interface IOverlay
 
 const navermaps = naver.maps;
 
-// 사용자 정의 오버레이, 마커를 리액트 코드로 쉽게 작성할 수 있도록 정의한 컴포넌트입니다.
+// FloatPane, Marker를 리액트 코드로 쉽게 작성할 수 있도록 정의한 컴포넌트입니다.
 // https://zeakd.github.io/react-naver-maps/0.0.13 라이브러리에 영감을 받아 제작하였습니다.
 const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
   {
@@ -66,16 +66,12 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     [propsNames, props, map]
   );
 
-  const prevContentRef = useRef<string>();
-
   const uid = useId();
 
-  const overlayContent = useMemo(
-    () => (uid ? `<div id="${uid}"></div>` : renderToString(<>{children}</>)),
-    [children, uid]
-  );
-  const contentRootRef = useRef<Root>();
+  const overlayContent = `<div id="${uid}"></div>`;
 
+  const prevContentRef = useRef<string>();
+  const contentRootRef = useRef<Root>();
   const idleRef = useRef<any>();
 
   const updateEvents = (
@@ -107,14 +103,12 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     });
   };
 
-  const hydrateChildren = () => {
+  const renderChildren = () => {
     const simplified = JSON.stringify(simplify(children));
 
     if (prevContentRef.current === simplified) {
       return;
     }
-
-    prevContentRef.current = simplified;
 
     const container = document.getElementById(uid);
 
@@ -123,6 +117,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
         contentRootRef.current = createRoot(container);
       }
       contentRootRef.current.render(<>{children}</>);
+      prevContentRef.current = simplified;
     }
   };
 
@@ -167,11 +162,11 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     instance.current.setOptions(overlayOptions);
 
     if (uid) {
-      hydrateChildren();
+      renderChildren();
     }
   };
 
-  const updateMarker = () => {
+  const setOverlayByBounds = () => {
     if (!map || !instance?.current) {
       return;
     }
@@ -205,7 +200,11 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
     }
 
     if (overlayProps?.position) {
-      idleRef.current = navermaps.Event.addListener(map, 'idle', updateMarker);
+      idleRef.current = navermaps.Event.addListener(
+        map,
+        'idle',
+        setOverlayByBounds
+      );
     }
 
     return () => {
@@ -221,7 +220,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
       updateOverlay();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, overlayProps, overlayContent]);
+  }, [map, overlayProps]);
 
   useEffect(() => {
     if (instance?.current) {
@@ -242,6 +241,7 @@ const OverlayFRRF: ForwardRefRenderFunction<IHandle, IOverlay> = (
 
   useImperativeHandle(ref, () => ({
     // 부모가 오버레이 인스턴스 참조할 수 있도록 추가
+    id: uid,
     instance: instance?.current,
   }));
 
